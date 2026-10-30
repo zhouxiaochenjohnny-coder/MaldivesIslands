@@ -325,7 +325,7 @@
     var i = compare.indexOf(id);
     if (i > -1) compare.splice(i, 1);
     else if (compare.length < 3) compare.push(id);
-    else { alert("最多对比 3 座岛。"); return; }
+    else { $("#compareText").textContent = "最多对比 3 座岛，请先移除一座。"; return; }
     $("#compareBar").hidden = compare.length === 0;
     $("#compareText").textContent = "已选 " + compare.length + " / 3：" + compare.map(byId).map(function (x) { return x.zh; }).join("、");
     $("#compareOpen").disabled = compare.length < 2;
