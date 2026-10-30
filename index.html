@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="回答 5 个问题，3 分钟找到适合你的马尔代夫度假岛。">
+  <meta name="description" content="回答 6 个问题，3 分钟找到适合你的马尔代夫度假岛。">
   <meta name="theme-color" content="#0A84FF">
   <title>马代选岛</title>
   <link rel="stylesheet" href="css/style.css">
@@ -24,7 +24,7 @@
     <section class="hero wrap">
       <p class="eyebrow">Maldives Island Finder</p>
       <h1>3 分钟，找到属于你的那座岛</h1>
-      <p class="lead">回答 5 个问题，按预算、同行人和偏好给出排序推荐。</p>
+      <p class="lead">回答 6 个问题，按预算、同行人和偏好给出排序推荐，并估算总花费。</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#quiz">开始选岛</a>
         <a class="btn btn-secondary" href="#browse">直接浏览</a>
@@ -59,6 +59,8 @@
           <option value="priceAsc">价格从低到高</option>
           <option value="priceDesc">价格从高到低</option>
         </select>
+        <select id="atoll" class="select" aria-label="环礁"></select>
+        <select id="brand" class="select" aria-label="酒店集团"></select>
       </div>
       <div class="chips" id="filters"></div>
       <p class="count" id="count"></p>
@@ -76,8 +78,8 @@
         <h3>数据说明与置信度</h3>
         <ul class="conf-list">
           <li><span class="conf conf-high">高</span>环礁位置、上岛方式：长期稳定。</li>
-          <li><span class="conf conf-mid">中</span>交通时长、浮潜与沙滩评分、儿童政策：近似值或主观评价。</li>
-          <li><span class="conf conf-low">低</span>价格档位：随季节与房型大幅浮动，仅供参考。</li>
+          <li><span class="conf conf-mid">中</span>交通时长、浮潜与沙滩评级、酒店等级与集团、餐标、儿童政策：近似值或主观评价。</li>
+          <li><span class="conf conf-low">低</span>价格档位、上岛交通费、总价估算：随季节、房型与运营商大幅浮动，仅供参考。</li>
         </ul>
         <p class="muted">本站数据为编辑整理，未经各酒店官方核验。预订前请以酒店官网或正规渠道报价为准。</p>
       </div>

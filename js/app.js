@@ -5,6 +5,9 @@
   var TIERS = window.TIERS;
   var TRANSFER = window.TRANSFER;
   var KIDS = window.KIDS;
+  var META = window.META;
+  var REEF_LABEL = window.REEF_LABEL;
+  var BEACH_LABEL = window.BEACH_LABEL;
   var $ = function (s) { return document.querySelector(s); };
 
   /* ---------- 问卷定义 ---------- */
@@ -23,6 +26,13 @@
         { v: 2, t: "中档", d: TIERS[2].range },
         { v: 3, t: "高端", d: TIERS[3].range },
         { v: 4, t: "不设上限", d: "只要合适就行" }
+      ] },
+    { key: "nights", title: "计划在岛上住几晚？", hint: "用于估算两位成人的房费 + 上岛交通总价，不含国际机票。", type: "single",
+      options: [
+        { v: 3, t: "3 晚", d: "短假" },
+        { v: 4, t: "4 晚", d: "" },
+        { v: 5, t: "5 晚", d: "最常见" },
+        { v: 7, t: "7 晚", d: "慢慢玩" }
       ] },
     { key: "prefs", title: "你最看重什么？", hint: "最多选 3 项，越靠前权重越高。", type: "multi", max: 3,
       options: [
@@ -49,7 +59,7 @@
       ] }
   ];
 
-  var answers = { group: null, budget: null, prefs: [], arrival: null, seasick: null };
+  var answers = { group: null, budget: null, nights: null, prefs: [], arrival: null, seasick: null };
   var step = 0;
 
   function renderStep() {
@@ -79,7 +89,7 @@
     if (!btn) return;
     var s = STEPS[step];
     var raw = btn.dataset.v;
-    var v = s.key === "budget" ? Number(raw) : raw;
+    var v = s.key === "budget" || s.key === "nights" ? Number(raw) : raw;
     if (s.type === "multi") {
       var i = answers.prefs.indexOf(v);
       if (i > -1) answers.prefs.splice(i, 1);
@@ -163,16 +173,16 @@
     var box = $("#results");
     box.hidden = false;
     var prefNames = answers.prefs.map(function (p) {
-      return STEPS[2].options.filter(function (o) { return o.v === p; })[0].t;
+      return STEPS[3].options.filter(function (o) { return o.v === p; })[0].t;
     });
     var groupName = STEPS[0].options.filter(function (o) { return o.v === answers.group; })[0].t;
     var head = '<div class="results-head"><h3>为你推荐</h3><span class="summary">' + groupName + " · " +
-      (answers.budget === 4 ? "不设上限" : TIERS[answers.budget].label + "及以下") + " · " + prefNames.join(" > ") +
+      (answers.budget === 4 ? "不设上限" : TIERS[answers.budget].label + "及以下") + " · " + answers.nights + " 晚 · " + prefNames.join(" > ") +
       ' · <a href="#quiz" id="redo">重新选择</a></span></div>';
     if (!list.length) {
       box.innerHTML = head + '<div class="card empty">没有完全符合条件的岛。试试放宽预算，或换一个同行人选项。</div>';
     } else {
-      box.innerHTML = head + '<div class="grid">' + list.slice(0, 6).map(function (r, i) { return card(r.isl, r, i + 1); }).join("") +
+      box.innerHTML = head + '<div class="grid">' + list.slice(0, 6).map(function (r, i) { return card(r.isl, r, i + 1, answers.nights); }).join("") +
         "</div>" + (list.length > 6 ? '<p class="count" style="margin-top:16px">另有 ' + (list.length - 6) + " 座岛符合条件，可在下方「全部岛屿」中查看。</p>" : "") +
         '<p class="muted" style="margin-top:12px">匹配分 = 你的偏好与岛屿特点的吻合程度，不代表岛屿本身的好坏。</p>';
     }
@@ -190,9 +200,21 @@
     var m = { high: "高", mid: "中", low: "低" };
     return '<span class="conf conf-' + level + '" title="数据置信度">' + m[level] + "</span>";
   }
+  function mealText(isl) {
+    if (window.AI_ONLY.indexOf(isl.id) > -1) return "标配全包 AI";
+    return isl.ai ? "半包 / 全包可选" : "早餐 / 半包为主";
+  }
+  function starText(isl) { return META[isl.id][0] + " 星"; }
+  function wan(n) { return (n / 10000).toFixed(1).replace(/\.0$/, "") + " 万"; }
+  // 两位成人：房费 × 晚数 + 往返上岛交通 × 2，不含国际机票
+  function estimate(isl, nights) {
+    var room = window.TIER_NIGHT[isl.tier], tr = window.TRANSFER_COST[isl.transfer.mode];
+    var lo = room[0] * nights + tr[0] * 2, hi = room[1] * nights + tr[1] * 2;
+    return "约 ¥" + wan(lo) + "–" + wan(hi) + (isl.tier === 4 ? " 以上" : "");
+  }
   function transferText(t) { return TRANSFER[t.mode] + " 约 " + t.minutes + " 分钟"; }
 
-  function card(isl, r, rank) {
+  function card(isl, r, rank, nights) {
     var reasons = r ? r.good.slice(0, 3).map(function (g) { return "<li>" + g + "</li>"; }).join("") +
       r.warn.slice(0, 2).map(function (w) { return '<li class="warn">' + w + "</li>"; }).join("") : "";
     var inCompare = compare.indexOf(isl.id) > -1;
@@ -203,10 +225,13 @@
       '<dl class="facts">' +
       "<div><dt>环礁</dt><dd>" + isl.atoll.split(" ")[0] + "</dd></div>" +
       "<div><dt>上岛</dt><dd>" + transferText(isl.transfer) + "</dd></div>" +
-      "<div><dt>浮潜屋礁" + conf("mid") + "</dt><dd>" + dots(isl.reef) + "</dd></div>" +
-      "<div><dt>沙滩" + conf("mid") + "</dt><dd>" + dots(isl.beach) + "</dd></div>" +
-      "<div><dt>价格档位" + conf("low") + "</dt><dd>" + TIERS[isl.tier].label + "</dd></div>" +
+      "<div><dt>浮潜" + conf("mid") + "</dt><dd>" + dots(isl.reef) + " " + REEF_LABEL[isl.reef] + "</dd></div>" +
+      "<div><dt>沙滩" + conf("mid") + "</dt><dd>" + dots(isl.beach) + " " + BEACH_LABEL[isl.beach] + " 级</dd></div>" +
+      "<div><dt>等级" + conf("mid") + "</dt><dd>" + starText(isl) + " · " + TIERS[isl.tier].label + "</dd></div>" +
+      "<div><dt>餐标</dt><dd>" + mealText(isl) + "</dd></div>" +
       "<div><dt>亲子</dt><dd>" + KIDS[isl.kids] + "</dd></div>" +
+      "<div><dt>集团" + conf("mid") + "</dt><dd>" + META[isl.id][1] + "</dd></div>" +
+      (nights ? '<div style="grid-column:1/-1"><dt>两人 ' + nights + " 晚参考总价" + conf("low") + "</dt><dd>" + estimate(isl, nights) + "（不含国际机票）</dd></div>" : "") +
       "</dl>" +
       '<div class="tags">' + isl.tags.map(function (t) { return '<span class="tag">' + t + "</span>"; }).join("") + "</div>" +
       (reasons ? '<ul class="reasons">' + reasons + "</ul>" : "") +
@@ -217,20 +242,37 @@
 
   /* ---------- 浏览与筛选 ---------- */
   var FILTERS = [
-    { id: "speedboat", t: "快艇可达", fn: function (i) { return i.transfer.mode === "speedboat" || /快艇/.test(i.transfer.note); } },
-    { id: "reef", t: "屋礁 4 分以上", fn: function (i) { return i.reef >= 4; } },
-    { id: "ai", t: "有全包", fn: function (i) { return i.ai; } },
-    { id: "club", t: "儿童俱乐部", fn: function (i) { return i.kids === "club"; } },
-    { id: "adults", t: "成人 / 限龄", fn: function (i) { return i.kids === "adults" || i.kids === "limit"; } },
-    { id: "t1", t: "经济", fn: function (i) { return i.tier === 1; }, group: "tier" },
-    { id: "t2", t: "中档", fn: function (i) { return i.tier === 2; }, group: "tier" },
-    { id: "t3", t: "高端", fn: function (i) { return i.tier === 3; }, group: "tier" },
-    { id: "t4", t: "奢华", fn: function (i) { return i.tier === 4; }, group: "tier" }
+    { id: "speedboat", t: "快艇", g: "交通", fn: function (i) { return i.transfer.mode === "speedboat"; } },
+    { id: "seaplane", t: "水上飞机", g: "交通", fn: function (i) { return i.transfer.mode === "seaplane"; } },
+    { id: "domestic", t: "可内飞", g: "交通", fn: function (i) { return i.transfer.mode === "domestic" || /内飞/.test(i.transfer.note); } },
+    { id: "reef5", t: "顶级", g: "浮潜", fn: function (i) { return i.reef === 5; } },
+    { id: "reef4", t: "中等偏上", g: "浮潜", fn: function (i) { return i.reef === 4; } },
+    { id: "reef3", t: "中等及以下", g: "浮潜", fn: function (i) { return i.reef <= 3; } },
+    { id: "beachA", t: "A 级", g: "沙滩", fn: function (i) { return i.beach === 5; } },
+    { id: "beachB", t: "B 级", g: "沙滩", fn: function (i) { return i.beach === 4; } },
+    { id: "beachC", t: "C 级及以下", g: "沙滩", fn: function (i) { return i.beach <= 3; } },
+    { id: "aiOnly", t: "标配全包", g: "餐标", fn: function (i) { return window.AI_ONLY.indexOf(i.id) > -1; } },
+    { id: "aiOpt", t: "可选全包", g: "餐标", fn: function (i) { return i.ai; } },
+    { id: "s4", t: "4 星及以下", g: "等级", fn: function (i) { return META[i.id][0] <= 4; } },
+    { id: "s5", t: "5 星", g: "等级", fn: function (i) { return META[i.id][0] === 5; } },
+    { id: "s6", t: "6 星", g: "等级", fn: function (i) { return META[i.id][0] === 6; } },
+    { id: "t1", t: "经济", g: "价格", fn: function (i) { return i.tier === 1; } },
+    { id: "t2", t: "中档", g: "价格", fn: function (i) { return i.tier === 2; } },
+    { id: "t3", t: "高端", g: "价格", fn: function (i) { return i.tier === 3; } },
+    { id: "t4", t: "奢华", g: "价格", fn: function (i) { return i.tier === 4; } },
+    { id: "club", t: "儿童俱乐部", g: "人群", fn: function (i) { return i.kids === "club"; } },
+    { id: "adults", t: "成人 / 限龄", g: "人群", fn: function (i) { return i.kids === "adults" || i.kids === "limit"; } },
+    { id: "water", t: "有水屋", g: "人群", fn: function (i) { return i.waterVilla; } }
   ];
   var active = {};
 
-  $("#filters").innerHTML = FILTERS.map(function (f) {
-    return '<button type="button" class="chip" data-f="' + f.id + '" aria-pressed="false">' + f.t + "</button>";
+  // 同组内为「或」，不同组之间为「且」
+  var groups = [];
+  FILTERS.forEach(function (f) { if (groups.indexOf(f.g) === -1) groups.push(f.g); });
+  $("#filters").innerHTML = groups.map(function (g) {
+    return '<div class="chip-row"><span class="chip-label">' + g + "</span>" + FILTERS.filter(function (f) { return f.g === g; }).map(function (f) {
+      return '<button type="button" class="chip" data-f="' + f.id + '" aria-pressed="false">' + f.t + "</button>";
+    }).join("") + "</div>";
   }).join("");
   $("#filters").addEventListener("click", function (e) {
     var c = e.target.closest(".chip");
@@ -239,18 +281,29 @@
     c.setAttribute("aria-pressed", active[c.dataset.f]);
     renderGrid();
   });
+
+  function fillSelect(sel, label, values) {
+    sel.innerHTML = '<option value="">' + label + "</option>" + values.map(function (v) { return '<option value="' + v + '">' + v + "</option>"; }).join("");
+    sel.addEventListener("change", renderGrid);
+  }
+  function uniq(arr) { return arr.filter(function (v, i) { return arr.indexOf(v) === i; }).sort(function (a, b) { return a.localeCompare(b, "zh"); }); }
+  fillSelect($("#atoll"), "全部环礁", uniq(ISLANDS.map(function (i) { return i.atoll.split(" ")[0]; })));
+  fillSelect($("#brand"), "全部集团", uniq(ISLANDS.map(function (i) { return META[i.id][1]; })));
   $("#search").addEventListener("input", renderGrid);
   $("#sort").addEventListener("change", renderGrid);
 
   function renderGrid() {
     var q = $("#search").value.trim().toLowerCase();
     var on = FILTERS.filter(function (f) { return active[f.id]; });
-    var tierF = on.filter(function (f) { return f.group === "tier"; });
-    var otherF = on.filter(function (f) { return f.group !== "tier"; });
+    var atoll = $("#atoll").value, brand = $("#brand").value;
     var list = ISLANDS.filter(function (i) {
-      if (q && (i.zh + i.en + i.atoll + i.tags.join("")).toLowerCase().indexOf(q) === -1) return false;
-      if (tierF.length && !tierF.some(function (f) { return f.fn(i); })) return false;
-      return otherF.every(function (f) { return f.fn(i); });
+      if (q && (i.zh + i.en + i.atoll + i.tags.join("") + META[i.id][1]).toLowerCase().indexOf(q) === -1) return false;
+      if (atoll && i.atoll.split(" ")[0] !== atoll) return false;
+      if (brand && META[i.id][1] !== brand) return false;
+      return groups.every(function (g) {
+        var fs = on.filter(function (f) { return f.g === g; });
+        return !fs.length || fs.some(function (f) { return f.fn(i); });
+      });
     });
     var sorters = {
       reef: function (a, b) { return b.reef - a.reef; },
@@ -287,12 +340,15 @@
     var rows = [
       ["环礁", function (i) { return i.atoll; }],
       ["上岛方式", function (i) { return transferText(i.transfer) + (i.transfer.note ? "<br><small>" + i.transfer.note + "</small>" : ""); }],
-      ["浮潜屋礁" + conf("mid"), function (i) { return dots(i.reef); }],
-      ["沙滩" + conf("mid"), function (i) { return dots(i.beach); }],
+      ["浮潜" + conf("mid"), function (i) { return dots(i.reef) + "<br><small>" + REEF_LABEL[i.reef] + "</small>"; }],
+      ["沙滩" + conf("mid"), function (i) { return dots(i.beach) + "<br><small>" + BEACH_LABEL[i.beach] + " 级</small>"; }],
+      ["等级" + conf("mid"), function (i) { return starText(i); }],
+      ["酒店集团" + conf("mid"), function (i) { return META[i.id][1]; }],
       ["价格档位" + conf("low"), function (i) { return TIERS[i.tier].label + "<br><small>" + TIERS[i.tier].range + "</small>"; }],
       ["岛屿大小", function (i) { return { S: "小岛", M: "中等", L: "大岛" }[i.size]; }],
       ["水屋", function (i) { return i.waterVilla ? "有" : "以沙屋为主"; }],
-      ["全包", function (i) { return i.ai ? "有" : "无 / 以半包为主"; }],
+      ["餐标", function (i) { return mealText(i); }],
+      ["两人 5 晚参考总价" + conf("low"), function (i) { return estimate(i, 5) + "<br><small>房费 + 往返上岛交通，不含国际机票</small>"; }],
       ["亲子", function (i) { return KIDS[i.kids] + (i.kidsNote ? "<br><small>" + i.kidsNote + "</small>" : ""); }],
       ["优点", function (i) { return i.pros.join("<br>"); }],
       ["注意", function (i) { return i.cons.join("<br>"); }]
@@ -311,8 +367,12 @@
       '<dl class="facts" style="margin-top:16px">' +
       "<div><dt>上岛" + conf("high") + "</dt><dd>" + TRANSFER[i.transfer.mode] + "</dd></div>" +
       "<div><dt>时长" + conf("mid") + "</dt><dd>约 " + i.transfer.minutes + " 分钟" + (i.transfer.note ? "（" + i.transfer.note + "）" : "") + "</dd></div>" +
-      "<div><dt>浮潜屋礁" + conf("mid") + "</dt><dd>" + dots(i.reef) + "</dd></div>" +
-      "<div><dt>沙滩" + conf("mid") + "</dt><dd>" + dots(i.beach) + "</dd></div>" +
+      "<div><dt>浮潜" + conf("mid") + "</dt><dd>" + dots(i.reef) + " " + REEF_LABEL[i.reef] + "</dd></div>" +
+      "<div><dt>沙滩" + conf("mid") + "</dt><dd>" + dots(i.beach) + " " + BEACH_LABEL[i.beach] + " 级</dd></div>" +
+      "<div><dt>等级" + conf("mid") + "</dt><dd>" + starText(i) + "</dd></div>" +
+      "<div><dt>酒店集团" + conf("mid") + "</dt><dd>" + META[i.id][1] + "</dd></div>" +
+      "<div><dt>餐标" + conf("mid") + "</dt><dd>" + mealText(i) + "</dd></div>" +
+      "<div><dt>上岛交通费" + conf("low") + "</dt><dd>约 ¥" + window.TRANSFER_COST[i.transfer.mode].join("–") + " / 人往返</dd></div>" +
       "<div><dt>价格档位" + conf("low") + "</dt><dd>" + TIERS[i.tier].label + "（" + TIERS[i.tier].range + "）</dd></div>" +
       "<div><dt>亲子" + conf("mid") + "</dt><dd>" + KIDS[i.kids] + (i.kidsNote ? "，" + i.kidsNote : "") + "</dd></div>" +
       "</dl>" +
@@ -362,6 +422,11 @@
       body: "岛上餐饮价格普遍远高于国内，酒水尤其贵。全包也分档，有的含酒水和水上项目，有的不含。",
       c: "<b>案例：</b>两个人每天喝几杯鸡尾酒、吃三餐，全包通常更省心；只吃早餐和一顿正餐、不喝酒，半包可能更省钱。",
       flip: "反过来看：全包会让人觉得「不吃就亏了」。先算清自己的饮食习惯，再看报价是否含税和服务费。" },
+    { h: "餐标：BB、HB、FB、AI 怎么选",
+      plain: "大白话：BB 只含早餐，HB 含早晚餐，FB 含三餐，AI 是三餐加部分酒水。",
+      body: "半包和全餐通常不含离岛当天的晚餐。全包各岛内容差别大，有的含高级酒水，有的只含基础饮料。",
+      c: "<b>案例：</b>坐深夜航班回国，离岛当天在岛上待到傍晚。这天的晚餐通常不在餐标内，需要另付。",
+      flip: "反过来看：全餐 FB 听起来全，但果汁和酒水通常另付。爱喝饮料的人，算下来可能不如直接选 AI。" },
     { h: "水屋还是沙屋",
       plain: "大白话：水屋是推门下海，沙屋是推门踩沙。",
       body: "水屋视野开阔，适合蜜月拍照。沙屋有树荫，更私密，带小孩更安全。",

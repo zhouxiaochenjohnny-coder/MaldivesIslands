@@ -166,7 +166,9 @@ h1, h2, h3, h4 { margin: 0; letter-spacing: -0.01em; }
 }
 .search { flex: 1 1 260px; }
 .search:focus, .select:focus { outline: 2px solid var(--tint); outline-offset: 0; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chips { display: grid; gap: 8px; margin-bottom: 12px; }
+.chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chip-label { width: 40px; flex: none; color: var(--label-3); font-size: 13px; }
 .chip {
   min-height: 36px; padding: 0 14px; border-radius: 999px; border: 0; cursor: pointer;
   background: var(--fill); color: var(--label); font: inherit; font-size: 14px;

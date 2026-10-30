@@ -107,7 +107,7 @@ window.ISLANDS = [
   { id: "baros", zh: "巴洛斯", en: "Baros Maldives", atoll: "北马累环礁 North Malé",
     transfer: { mode: "speedboat", minutes: 25, note: "" },
     tier: 3, reef: 5, beach: 4, size: "S", waterVilla: true, ai: false, kids: "limit",
-    kidsNote: "通常 8 岁以上可入住",
+    kidsNote: "多数来源称 8 岁以上可入住",
     tags: ["蜜月经典", "顶级屋礁", "小而精"],
     pros: ["屋礁离岸近，下水就能看到鱼和海龟", "快艇上岛方便"],
     cons: ["岛小，活动以安静放松为主", "不适合带小童"],
@@ -236,10 +236,11 @@ window.ISLANDS = [
   { id: "hurawalhi", zh: "呼拉瓦黎", en: "Hurawalhi Island Resort", atoll: "拉维亚尼环礁 Lhaviyani",
     transfer: { mode: "seaplane", minutes: 40, note: "" },
     tier: 3, reef: 3, beach: 4, size: "M", waterVilla: true, ai: true, kids: "adults",
+    kidsNote: "最低入住年龄各来源说法不一（15–18 岁）",
     tags: ["5.8 海底餐厅", "成人岛", "蜜月"],
     pros: ["海底餐厅体验独特", "成人岛，安静浪漫"],
     cons: ["水飞较远", "海底餐厅另收费且需预订"],
-    verify: ["tier", "kids"] },
+    verify: ["tier", "kidsNote"] },
 
   { id: "sun-siyam-irufushi", zh: "伊露富士", en: "Sun Siyam Iru Fushi", atoll: "努努环礁 Noonu",
     transfer: { mode: "seaplane", minutes: 45, note: "" },
@@ -260,7 +261,7 @@ window.ISLANDS = [
   { id: "milaidhoo", zh: "米莱德胡", en: "Milaidhoo Maldives", atoll: "芭环礁 Baa",
     transfer: { mode: "seaplane", minutes: 35, note: "" },
     tier: 4, reef: 5, beach: 4, size: "S", waterVilla: true, ai: false, kids: "limit",
-    kidsNote: "有入住年龄下限，以酒店最新政策为准",
+    kidsNote: "官网称仅接待 9 岁以上儿童",
     tags: ["小岛", "顶级屋礁", "私密"],
     pros: ["小岛私密，屋礁出色", "靠近汉尼法鲁湾"],
     cons: ["不适合带小童", "价格高"],
@@ -328,5 +329,61 @@ window.ISLANDS = [
     tags: ["经济全包", "大岛"],
     pros: ["全包价格低", "岛大设施全"],
     cons: ["硬件偏老", "交通时间长"],
+    verify: ["tier"] },
+  { id: "kandolhu", zh: "坎多卢", en: "Kandolhu Maldives", atoll: "北阿里环礁 North Ari",
+    transfer: { mode: "seaplane", minutes: 25, note: "" },
+    tier: 3, reef: 5, beach: 4, size: "S", waterVilla: true, ai: true, kids: "ok",
+    tags: ["小岛", "顶级屋礁", "靠近海沟"],
+    pros: ["岛屿一圈珊瑚环绕，鱼类丰富", "小岛私密，适合蜜月"],
+    cons: ["房间少，旺季需提前很久预订", "设施有限"],
+    verify: ["tier", "kids"] },
+
+  { id: "w-maldives", zh: "W 宁静岛", en: "W Maldives", atoll: "北阿里环礁 North Ari",
+    transfer: { mode: "seaplane", minutes: 25, note: "" },
+    tier: 4, reef: 5, beach: 4, size: "M", waterVilla: true, ai: false, kids: "ok",
+    tags: ["顶级屋礁", "潮流设计", "派对氛围"],
+    pros: ["屋礁顶级，下水即见珊瑚", "设计时尚，适合年轻情侣"],
+    cons: ["氛围偏热闹，不算安静", "价格高"],
+    verify: ["tier"] },
+
+  { id: "vakkaru", zh: "瓦卡鲁", en: "Vakkaru Maldives", atoll: "芭环礁 Baa",
+    transfer: { mode: "seaplane", minutes: 25, note: "也可内飞约 20 分钟 + 快艇约 30 分钟" },
+    tier: 4, reef: 4, beach: 5, size: "M", waterVilla: true, ai: false, kids: "club",
+    tags: ["汉尼法鲁湾", "白沙", "亲子"],
+    pros: ["沙滩评级高", "屋礁中等偏上，可安排蝠鲼行程"],
+    cons: ["价格高"],
     verify: ["tier"] }
 ];
+
+/* 酒店等级与集团（置信度：中）。星级为行业通行叫法，马代并无官方统一评级 */
+window.META = {
+  "soneva-fushi": [6, "Soneva"], "soneva-jani": [6, "Soneva"], "cheval-blanc": [6, "LVMH"],
+  "fs-landaa": [6, "四季"], "fs-kudahuraa": [6, "四季"], "oo-reethirah": [6, "One&Only"],
+  "waldorf": [6, "希尔顿"], "stregis": [6, "万豪"], "conrad": [5, "希尔顿"],
+  "baros": [5, "其他"], "gili": [6, "其他"], "kurumba": [5, "其他"],
+  "vilamendhoo": [4, "其他"], "kuramathi": [4, "其他"], "centara-grand": [5, "盛泰乐"],
+  "bandos": [4, "其他"], "filitheyo": [4, "其他"], "embudu": [3, "其他"],
+  "velassaru": [5, "其他"], "anantara-veli": [5, "安纳塔拉"], "anantara-dhigu": [5, "安纳塔拉"],
+  "constance-halaveli": [5, "康斯坦斯"], "constance-moofushi": [4, "康斯坦斯"], "lux-south-ari": [5, "LUX*"],
+  "lily-beach": [5, "其他"], "hurawalhi": [5, "其他"], "sun-siyam-irufushi": [5, "Sun Siyam"],
+  "joali": [6, "其他"], "milaidhoo": [6, "其他"], "ozen-bolifushi": [6, "Atmosphere"],
+  "hard-rock": [5, "Hard Rock"], "siyam-world": [5, "Sun Siyam"], "kandima": [4, "其他"],
+  "amilla": [5, "其他"], "angsana-velavaru": [5, "悦榕"], "mirihi": [4, "其他"],
+  "adaaran-meedhupparu": [4, "Adaaran"], "kandolhu": [5, "其他"], "w-maldives": [6, "万豪"],
+  "vakkaru": [6, "其他"]
+};
+
+/* 标配一价全包（不可选半包）的岛，置信度：中 */
+window.AI_ONLY = ["constance-moofushi", "ozen-bolifushi", "siyam-world"];
+
+/* 往返上岛交通费参考（人民币 / 人，置信度：低，随运营商与季节变化） */
+window.TRANSFER_COST = {
+  speedboat: [700, 2000],
+  seaplane: [4000, 7000],
+  domestic: [3000, 5000]
+};
+
+window.REEF_LABEL = { 5: "顶级", 4: "中等偏上", 3: "中等", 2: "中等偏下", 1: "较差" };
+window.BEACH_LABEL = { 5: "A", 4: "B", 3: "C", 2: "D", 1: "D" };
+window.TIER_NIGHT = { 1: [2000, 4000], 2: [4000, 7000], 3: [7000, 12000], 4: [12000, 25000] };
+
